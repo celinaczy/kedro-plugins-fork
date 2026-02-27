@@ -46,6 +46,26 @@ class TestHFTransformerPipelineDataset:
         )
         assert model is mocked_pipeline.return_value
 
+    def test_pathlike_in_pipeline_kwargs(self, task, model_name, mocker, tmp_path):
+        """Test that os.PathLike objects work in pipeline_kwargs."""
+        mocked_pipeline = mocker.patch(
+            "kedro_datasets.huggingface.transformer_pipeline_dataset.pipeline"
+        )
+
+        cache_dir = tmp_path / "cache"
+        pipeline_kwargs = {"cache_dir": cache_dir}
+        dataset = HFTransformerPipelineDataset(
+            task=task,
+            model_name=model_name,
+            pipeline_kwargs=pipeline_kwargs,
+        )
+        model = dataset.load()
+
+        mocked_pipeline.assert_called_once_with(
+            task, model=model_name, cache_dir=cache_dir
+        )
+        assert model is mocked_pipeline.return_value
+
     def test_dataset_redundant_pipeline_kwargs(self, task, model_name, mocker):
         pipeline_kwargs = {"task": "redundant"}
         with pytest.warns(
